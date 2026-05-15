@@ -251,6 +251,26 @@
         text-transform: uppercase;
       }
 
+      .site-footer {
+        margin: 18px 0 0;
+        color: var(--muted);
+        font-size: 0.88rem;
+        line-height: 1.5;
+        text-align: center;
+      }
+
+      .site-footer a {
+        color: var(--green);
+        font-weight: 800;
+        text-decoration: underline;
+        text-decoration-color: rgba(21, 71, 52, 0.34);
+        text-underline-offset: 3px;
+      }
+
+      .site-footer a:hover {
+        color: var(--green-dark);
+      }
+
       @media (max-width: 640px) {
         .topbar-inner {
           padding: 14px;
@@ -352,6 +372,10 @@
             </output>
           </form>
         </section>
+
+        <footer class="site-footer">
+          Site maintained by <a href="https://www.eryney.com" rel="noopener">Eryney Marrogi</a>
+        </footer>
       </main>
     </div>
 
