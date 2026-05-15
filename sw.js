@@ -1,7 +1,8 @@
-const CACHE_NAME = "weeks-out-v4";
+const CACHE_NAME = "weeks-out-v5";
 const APP_FILES = [
   "./",
   "./index.html",
+  "./assets/logos.png",
   "./manifest.webmanifest",
   "./icon.svg"
 ];
