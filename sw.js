@@ -1,4 +1,4 @@
-const CACHE_NAME = "weeks-out-v3";
+const CACHE_NAME = "weeks-out-v4";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -25,9 +25,23 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request);
+    caches.open(CACHE_NAME).then((cache) => {
+      return caches.match(event.request).then((cached) => {
+        const fresh = fetch(event.request).then((response) => {
+          cache.put(event.request, response.clone());
+          return response;
+        }).catch(() => cached);
+
+        return cached || fresh;
+      });
     })
   );
 });
