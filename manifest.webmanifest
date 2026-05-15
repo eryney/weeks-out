@@ -1,12 +1,12 @@
 {
-  "name": "Weeks Out Calculator",
+  "name": "UVM Radiation Oncology Weeks Out",
   "short_name": "Weeks Out",
-  "description": "Pick a date and see what date lands 2 to 10 weeks later.",
+  "description": "University of Vermont Medical Center Department of Radiation Oncology date calculator.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#fbfaf7",
-  "theme_color": "#176b68",
+  "background_color": "#fbfaf2",
+  "theme_color": "#154734",
   "icons": [
     {
       "src": "icon.svg",
