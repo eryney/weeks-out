@@ -1,4 +1,4 @@
-const CACHE_NAME = "weeks-out-v2";
+const CACHE_NAME = "weeks-out-v3";
 const APP_FILES = [
   "./",
   "./index.html",
