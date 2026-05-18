@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#154734">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Weeks Out">
-    <title>UVM Radiation Oncology Weeks Out Calculator</title>
+    <meta name="apple-mobile-web-app-title" content="Date Calc">
+    <title>UVM Radiation Oncology Date Calculator</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="icon.svg">
     <style>
@@ -130,7 +130,7 @@
 
       .control-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 180px;
+        grid-template-columns: minmax(0, 1fr) 210px 180px;
         gap: 18px;
       }
 
@@ -139,13 +139,51 @@
         gap: 8px;
       }
 
+      .segment-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        min-height: 54px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+        padding: 4px;
+      }
+
+      .segment {
+        position: relative;
+        display: grid;
+      }
+
+      .segment input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .segment span {
+        display: grid;
+        place-items: center;
+        border-radius: 4px;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 0.95rem;
+        font-weight: 850;
+        transition: background 140ms ease, color 140ms ease;
+      }
+
+      .segment input:checked + span {
+        background: var(--green);
+        color: #ffffff;
+      }
+
       label {
         color: var(--green-dark);
         font-size: 0.82rem;
         font-weight: 850;
       }
 
-      input,
+      input[type="date"],
       select {
         width: 100%;
         min-height: 54px;
@@ -158,8 +196,9 @@
         padding: 0 14px;
       }
 
-      input:focus,
-      select:focus {
+      input[type="date"]:focus,
+      select:focus,
+      .segment input:focus-visible + span {
         outline: 3px solid rgba(255, 209, 0, 0.42);
         border-color: var(--green);
       }
@@ -330,8 +369,8 @@
         <section class="tool" aria-labelledby="tool-title">
           <div class="tool-header">
             <p class="tool-label">Treatment Date Utility</p>
-            <h1 id="tool-title">Weeks Out</h1>
-            <p class="intro">Pick a starting date, choose a 2 to 10 week interval, and get the exact target date.</p>
+            <h1 id="tool-title">Date Calculator</h1>
+            <p class="intro">Pick a starting date, choose weeks or calendar months, and get the exact target date.</p>
           </div>
 
           <form id="date-form">
@@ -342,18 +381,22 @@
               </div>
 
               <div class="field">
-                <label for="weeks">Interval</label>
-                <select id="weeks" name="weeks">
-                  <option value="2">2 weeks</option>
-                  <option value="3">3 weeks</option>
-                  <option value="4">4 weeks</option>
-                  <option value="5">5 weeks</option>
-                  <option value="6">6 weeks</option>
-                  <option value="7">7 weeks</option>
-                  <option value="8">8 weeks</option>
-                  <option value="9">9 weeks</option>
-                  <option value="10">10 weeks</option>
-                </select>
+                <label>Interval Type</label>
+                <div class="segment-group" role="radiogroup" aria-label="Interval type">
+                  <label class="segment">
+                    <input type="radio" name="interval-type" value="weeks" checked>
+                    <span>Weeks</span>
+                  </label>
+                  <label class="segment">
+                    <input type="radio" name="interval-type" value="months">
+                    <span>Months</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="field">
+                <label for="interval-value">Interval</label>
+                <select id="interval-value" name="interval-value"></select>
               </div>
             </div>
 
@@ -381,7 +424,8 @@
 
     <script>
       const dateInput = document.querySelector("#start-date");
-      const weeksInput = document.querySelector("#weeks");
+      const intervalTypeInputs = document.querySelectorAll("input[name=\"interval-type\"]");
+      const intervalValueInput = document.querySelector("#interval-value");
       const form = document.querySelector("#date-form");
       const result = document.querySelector("#result");
 
@@ -404,28 +448,74 @@
         return new Date(year, month - 1, day);
       }
 
+      function getIntervalType() {
+        return document.querySelector("input[name=\"interval-type\"]:checked").value;
+      }
+
+      function pluralize(value, unit) {
+        return value === 1 ? unit : `${unit}s`;
+      }
+
+      function getLastDayOfMonth(year, monthIndex) {
+        return new Date(year, monthIndex + 1, 0).getDate();
+      }
+
+      function addCalendarMonths(date, months) {
+        const targetYear = date.getFullYear();
+        const targetMonth = date.getMonth() + months;
+        const lastDay = getLastDayOfMonth(targetYear, targetMonth);
+        return new Date(targetYear, targetMonth, Math.min(date.getDate(), lastDay));
+      }
+
+      function populateIntervalOptions() {
+        const type = getIntervalType();
+        const currentValue = Number(intervalValueInput.value);
+        const values = type === "weeks"
+          ? Array.from({ length: 11 }, (_, index) => index + 2)
+          : Array.from({ length: 6 }, (_, index) => index + 1);
+
+        intervalValueInput.innerHTML = values.map((value) => {
+          const unit = pluralize(value, type === "weeks" ? "week" : "month");
+          return `<option value="${value}">${value} ${unit}</option>`;
+        }).join("");
+
+        if (values.includes(currentValue)) {
+          intervalValueInput.value = String(currentValue);
+        }
+      }
+
       function renderDate() {
         if (!dateInput.value) return;
 
-        const weeks = Number(weeksInput.value);
+        const type = getIntervalType();
+        const intervalValue = Number(intervalValueInput.value);
         const start = parseLocalDate(dateInput.value);
-        const target = new Date(start);
-        target.setDate(start.getDate() + weeks * 7);
+        const target = type === "weeks" ? new Date(start) : addCalendarMonths(start, intervalValue);
+
+        if (type === "weeks") {
+          target.setDate(start.getDate() + intervalValue * 7);
+        }
+
+        const unit = pluralize(intervalValue, type === "weeks" ? "week" : "month");
+        const detail = type === "weeks"
+          ? `${intervalValue} ${unit} from ${formatter.format(start)} (${intervalValue * 7} days later)`
+          : `${intervalValue} calendar ${unit} from ${formatter.format(start)}`;
 
         result.innerHTML = `
           <div>
             <div class="result-label">Calculated Date</div>
             <div class="result-date">${formatter.format(target)}</div>
-            <div class="result-detail">${weeks} weeks from ${formatter.format(start)} (${weeks * 7} days later)</div>
+            <div class="result-detail">${detail}</div>
           </div>
           <div class="result-badge" aria-hidden="true">
-            <div class="result-weeks">${weeks}</div>
-            <div class="result-unit">weeks</div>
+            <div class="result-weeks">${intervalValue}</div>
+            <div class="result-unit">${unit}</div>
           </div>
         `;
       }
 
       dateInput.value = toInputDate(new Date());
+      populateIntervalOptions();
       renderDate();
 
       form.addEventListener("submit", (event) => {
@@ -434,7 +524,13 @@
       });
 
       dateInput.addEventListener("change", renderDate);
-      weeksInput.addEventListener("change", renderDate);
+      intervalValueInput.addEventListener("change", renderDate);
+      intervalTypeInputs.forEach((input) => {
+        input.addEventListener("change", () => {
+          populateIntervalOptions();
+          renderDate();
+        });
+      });
 
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {

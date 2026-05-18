@@ -1,7 +1,7 @@
 {
-  "name": "UVM Radiation Oncology Weeks Out",
-  "short_name": "Weeks Out",
-  "description": "University of Vermont Medical Center Department of Radiation Oncology date calculator.",
+  "name": "UVM Radiation Oncology Date Calculator",
+  "short_name": "Date Calc",
+  "description": "University of Vermont Medical Center Department of Radiation Oncology date interval calculator.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
